@@ -7,12 +7,13 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 
 import java.awt.event.ActionListener;
+import java.io.Serializable;
 import java.awt.event.ActionEvent;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 
-public class ClientUI {
+public class ClientUI implements Serializable {
 
 	private JFrame frame;
 	private JTable table;
