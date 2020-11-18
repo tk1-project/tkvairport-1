@@ -3,7 +3,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import model.Flight;
 
-public interface IFlightServer extends Remote{
+public interface IFlightServer extends Remote {
 
 	public void login(String clientName, IFlightClient client) throws RemoteException;
 

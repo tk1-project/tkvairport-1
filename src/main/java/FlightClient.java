@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
 import java.util.HashMap;
 import java.util.List;
@@ -14,12 +15,12 @@ import interfaces.IFlightClient;
 import interfaces.IFlightServer;
 import model.Flight;
 
-public class FlightClient implements IFlightClient, Serializable {
+public class FlightClient extends UnicastRemoteObject implements IFlightClient, Serializable {
 
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 
 	// ui
-	private transient ClientUI ui = new ClientUI();
+	private ClientUI ui = new ClientUI();
 	
 	private static final String HOSTNAME = "localhost";
 	private static final int PORT = 1099;
@@ -29,14 +30,16 @@ public class FlightClient implements IFlightClient, Serializable {
 	private Map<String, Flight> flights;
 
 	// global state
-	public FlightClient(String clientName) {
+	public FlightClient(String clientName) throws RemoteException {
 		this.clientName = clientName;
 
 		this.flights = new HashMap<String, Flight>();
+		
 	}
 
 	@Override
 	public void receiveListOfFlights(List<Flight> flights) {
+		logger.log(Level.INFO, "List of flights received: " + flights.size());
 		
 		for(Flight f: flights) {
 			String flightKey = f.getAirline() + f.getFlightNumber();
@@ -46,7 +49,6 @@ public class FlightClient implements IFlightClient, Serializable {
 				this.flights.put(flightKey, f);	
 			}
 		}
-		logger.log(Level.INFO, "List of flights received: " + flights.size());
 	}
 
 	@Override

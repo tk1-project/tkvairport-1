@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -18,7 +19,7 @@ import model.DepartureFlight;
 import model.Flight;
 import model.FlightStatus;
 
-public class FlightServer implements IFlightServer {
+public class FlightServer extends UnicastRemoteObject implements IFlightServer, Serializable {
 
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 	
@@ -27,7 +28,7 @@ public class FlightServer implements IFlightServer {
 	private static Registry r;
 
 
-	protected FlightServer() {
+	protected FlightServer() throws RemoteException {
 		super();
 
 		flights = new HashMap<>();
@@ -82,6 +83,7 @@ public class FlightServer implements IFlightServer {
 		
 		client.receiveListOfFlights(new ArrayList<>(this.flights.values()));
 		logger.log(Level.INFO, "New client logged in: " + clientName);
+		logger.log(Level.INFO, "Sending flights: " + this.flights.values());
 	}
 
 	@Override
@@ -110,7 +112,7 @@ public class FlightServer implements IFlightServer {
 		logger.log(Level.INFO, "Delete flight: " + flight.toString());
 	}
 
-	private void informAllClients(Flight flight, boolean deleted) {
+	private void informAllClients(Flight flight, boolean deleted) throws RemoteException {
 		for(IFlightClient client: this.clients.values()){  
 			client.receiveUpdatedFlight(flight, deleted);
 		}
@@ -127,8 +129,8 @@ public class FlightServer implements IFlightServer {
 			
 			// export the remote object to the stub, '0' means we don't care which
 			// port that exportObject uses
-			IFlightServer stub = (IFlightServer) UnicastRemoteObject
-					.exportObject((IFlightServer) flightserver, 0);
+			// IFlightServer stub = (IFlightServer) UnicastRemoteObject
+			// 		.exportObject((IFlightServer) flightserver, 0);
 			
 			/* create a local registry
 			 * the registry can be bound by server and discovered by client 
@@ -141,7 +143,7 @@ public class FlightServer implements IFlightServer {
 			// Registry registry = LocateRegistry.getRegistry();
 			
 			// bind the stub to the registry
-			registry.bind("Flight Server", stub);
+			registry.bind("Flight Server", flightserver);
 			
 			logger.info("Server is ready");
 			
