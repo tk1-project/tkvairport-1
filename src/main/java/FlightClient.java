@@ -1,9 +1,11 @@
+import java.awt.EventQueue;
 import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +20,7 @@ import model.Flight;
 public class FlightClient extends UnicastRemoteObject implements IFlightClient, Serializable {
 
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
-
-	// ui
-	private ClientUI ui = new ClientUI();
+	private static ClientUI ui;
 	
 	private static final String HOSTNAME = "localhost";
 	private static final int PORT = 1099;
@@ -49,6 +49,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 				this.flights.put(flightKey, f);	
 			}
 		}
+		//ui.receiveFlights(flights);
 	}
 
 	@Override
@@ -69,20 +70,20 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 	}
 
 	public void startup() {
+		
 		Registry registry;
 		try {
-			registry = LocateRegistry.getRegistry();
+			registry = LocateRegistry.getRegistry("localhost",1099);
 			
 			IFlightServer stub = (IFlightServer) registry
 					.lookup("Flight Server");
 			
 			stub.login(this.clientName, this);
+			
 		} catch (RemoteException | NotBoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		ui.launch();
 	}
 	
 	public String getClientName() {
@@ -97,12 +98,12 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		try {
 			String clientname = UUID.randomUUID().toString();
 			FlightClient client = new FlightClient(clientname);
-			
+			ui = new ClientUI();
+					
 			client.startup();
 		} catch (Exception ex) {
 			logger.log(Level.SEVERE, "Server exception", ex);
 		}
-	
 	}
 
 }
