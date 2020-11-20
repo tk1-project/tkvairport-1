@@ -56,6 +56,12 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 						"cLocation", "cCounter", LocalDateTime.of(2020, 11, 11, 13, 0), LocalDateTime.of(2020, 11, 11, 13, 0)),
 				new ArrivalFlight("LH", "Lufthansa", "A380", "999", "BER", "SFO", 
 						LocalDate.of(2019,  11,  11), FlightStatus.D, LocalDateTime.of(2020, 12, 12, 12, 0), "1", 
+						arrivalGates, LocalDateTime.of(2020,  12, 12, 13, 0)),
+				new DepartureFlight("KLM", "KLM Netherlands", "E190", "1407", "AMS", "FRA", 
+						LocalDate.of(2020, 11, 13), FlightStatus.B, LocalDateTime.of(2020, 11, 11, 12, 0), "terminal", departureGates, 
+						"cLocation", "cCounter", LocalDateTime.of(2020, 11, 11, 13, 0), LocalDateTime.of(2020, 11, 11, 13, 0)),
+				new ArrivalFlight("LH", "Lufthansa", "A380", "1171", "BER", "SFO", 
+						LocalDate.of(2019,  11,  15), FlightStatus.D, LocalDateTime.of(2020, 12, 12, 12, 0), "1", 
 						arrivalGates, LocalDateTime.of(2020,  12, 12, 13, 0))
 		};
 		
