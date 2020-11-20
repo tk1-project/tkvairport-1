@@ -45,7 +45,7 @@ public class ClientUI implements Serializable {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				creatAndShowGUI();
+				initializeGUI();
 			}
 		});
 	}	
@@ -92,23 +92,6 @@ public class ClientUI implements Serializable {
 	
 	private void addData() {
 		
-		ArrayList<String> arrivalGates = new ArrayList();
-		arrivalGates.add("B54");
-		arrivalGates.add("B55");
-
-		ArrayList<String> departureGates = new ArrayList();
-		departureGates.add("A11");
-		departureGates.add("B13");
-		
-		Flight[] showFlights = new Flight[] {
-				new DepartureFlight("LH", "Lufthansa", "A380", "591", "NBO", "FRA", 
-						LocalDate.of(2020, 11, 11), FlightStatus.B, LocalDateTime.of(2020, 11, 11, 12, 0), "terminal", departureGates, 
-						"cLocation", "cCounter", LocalDateTime.of(2020, 11, 11, 13, 0), LocalDateTime.of(2020, 11, 11, 13, 0)),
-				new ArrivalFlight("LH", "Lufthansa", "A380", "999", "BER", "SFO", 
-						LocalDate.of(2019,  11,  11), FlightStatus.D, LocalDateTime.of(2020, 12, 12, 12, 0), "1", 
-						arrivalGates, LocalDateTime.of(2020,  12, 12, 13, 0))
-		};
-		
 		Runnable newdo = new Runnable() {
 
 			@Override
@@ -124,8 +107,9 @@ public class ClientUI implements Serializable {
                 col.add("Terminal");
                 col.add("Scheduled Time");
                 col.add("Estimated Time");
+                tableModel.setColumnNames(col);
                 
-                for(Flight f:showFlights) {
+                for(Flight f:flights) {
                 	data = null;
                     data = new Vector<Object>();
                     data.addElement(f.getAirline());
@@ -138,7 +122,6 @@ public class ClientUI implements Serializable {
                     data.addElement(f.getsTime());
                     tableModel.addRow(data);
                 }
-                addTableListener();
             }
         };
         SwingUtilities.invokeLater(newdo);
@@ -148,7 +131,7 @@ public class ClientUI implements Serializable {
 		
 	}
 
- 	private void creatAndShowGUI() {
+ 	private void initializeGUI() {
 		
 		//Create and set up the window
 		frame = new JFrame("TK Airport Arrivals / Departures");

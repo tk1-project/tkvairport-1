@@ -49,7 +49,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 				this.flights.put(flightKey, f);	
 			}
 		}
-		//ui.receiveFlights(flights);
+		ui.receiveFlights(new ArrayList<>(this.flights.values()));
 	}
 
 	@Override
