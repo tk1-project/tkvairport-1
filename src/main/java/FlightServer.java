@@ -136,7 +136,7 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 			// 		.exportObject((IFlightServer) flightserver, 0);
 			
 			// create a local registry
-			Registry registry = LocateRegistry.createRegistry(1099);
+			Registry registry = LocateRegistry.createRegistry(1090);
 
 			// Registry registry = LocateRegistry.getRegistry();
 			

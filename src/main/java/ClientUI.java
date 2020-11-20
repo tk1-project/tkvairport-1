@@ -13,6 +13,7 @@ import model.FlightStatus;
 
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 
 import java.awt.event.ActionListener;
 import java.io.Serializable;
@@ -33,6 +34,7 @@ public class ClientUI implements Serializable {
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 
 	private JFrame frame;
+	private JDialog dialog;
 	private myTableModel tableModel;
 	private JScrollPane tableScroll;
 	private JTable table;
@@ -79,14 +81,32 @@ public class ClientUI implements Serializable {
         buttonWrapper= new JPanel();
         wrapper.add(buttonWrapper, BorderLayout.SOUTH);
         
-        btn_new = new JButton("New");
+        btn_new = addButton("New");
         buttonWrapper.add(btn_new);
         
-        btn_edit = new JButton("Edit");
+        btn_edit = addButton("Edit");
         buttonWrapper.add(btn_edit);
         
-        btn_del = new JButton("Delete");
+        btn_del = addButton("Delete");
         buttonWrapper.add(btn_del); 
+		
+	}
+	
+	private JButton addButton(String text) {
+		JButton button = new JButton(text);
+		if (text == "New") {
+			button.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					ItemDetail dialog = new ItemDetail();
+					dialog.setBounds(150, 150, 800, 600);
+					dialog.setVisible(true);
+				}
+			});
+		}
+		return button;
+	}
+	
+	public void actionPerformed(ActionEvent event) {
 		
 	}
 	
@@ -208,4 +228,5 @@ public class ClientUI implements Serializable {
         	fireTableCellUpdated(row, col);
         }
 	}
+
 }

@@ -73,7 +73,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		
 		Registry registry;
 		try {
-			registry = LocateRegistry.getRegistry("localhost",1099);
+			registry = LocateRegistry.getRegistry("localhost",1090);
 			
 			IFlightServer stub = (IFlightServer) registry
 					.lookup("Flight Server");
