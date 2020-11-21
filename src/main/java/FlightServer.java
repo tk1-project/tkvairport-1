@@ -95,7 +95,7 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 
 	@Override
 	public void updateFlight(String clientName, Flight flight) throws RemoteException {
-		String flightKey = flight.getAirline() + flight.getFlightNumber();
+		String flightKey = flight.getIataCode() + flight.getFlightNumber();
 		if(this.flights.containsKey(flightKey)) {
 			this.flights.replace(flightKey, flight);
 		} else {
@@ -107,7 +107,7 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 
 	@Override
 	public void deleteFlight(String clientName, Flight flight) throws RemoteException {
-		String flightKey = flight.getAirline() + flight.getFlightNumber();
+		String flightKey = flight.getIataCode() + flight.getFlightNumber();
 		if(this.flights.containsKey(flightKey)) {
 			this.flights.remove(flightKey);
 		}

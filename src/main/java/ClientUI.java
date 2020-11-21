@@ -122,7 +122,7 @@ public class ClientUI implements Serializable {
 		if (text == "New") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Add New Flight");
+					ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Add New Flight", true);
 					dialog.setBounds(150, 150, 800, 600);
 					dialog.setVisible(true);
 				}
@@ -132,7 +132,7 @@ public class ClientUI implements Serializable {
 				public void actionPerformed(ActionEvent event) {
 					int rowNumber = table.getSelectedRow();
 					if(rowNumber >= 0 && rowSelected) {
-						ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Edit Flight");
+						ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Edit Flight", false);
 						String iataCode = table.getValueAt(rowNumber, 1).toString();
 						String flightNumber = table.getValueAt(rowNumber, 2).toString();
 						System.out.println("iataCode: " + iataCode);

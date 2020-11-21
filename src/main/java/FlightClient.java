@@ -44,7 +44,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		logger.log(Level.INFO, "List of flights received: " + flights.size());
 		
 		for(Flight f: flights) {
-			String flightKey = f.getAirline() + f.getFlightNumber();
+			String flightKey = f.getIataCode() + f.getFlightNumber();
 			if(this.flights.containsKey(flightKey)) {
 				this.receiveUpdatedFlight(f, false);
 			} else {
@@ -56,7 +56,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 
 	@Override
 	public void receiveUpdatedFlight(Flight flight, boolean deleted) {
-		String flightKey = flight.getAirline() + flight.getFlightNumber();
+		String flightKey = flight.getIataCode() + flight.getFlightNumber();
 		if(deleted) {
 			if(this.flights.containsKey(flightKey)) {
 				this.flights.remove(flightKey);

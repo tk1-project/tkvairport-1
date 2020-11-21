@@ -55,12 +55,14 @@ public class ItemDetail extends JDialog {
 	JRadioButton bArr, bDep;
 	
 	private boolean depFlight;
+	private boolean editFlight;
 	
 	private ClientUI ui;
 
-	public ItemDetail(ClientUI ui, JFrame frame, String title) {
+	public ItemDetail(ClientUI ui, JFrame frame, String title, boolean editable) {
 		super(frame, title);
 		this.ui = ui;
+		this.editFlight = editable;
 		
 		initializeGUI();
 	}
@@ -310,6 +312,10 @@ public class ItemDetail extends JDialog {
 			wrapper.add(flightStates, gbc_comboBox);
 		}		
 		
+		originDate.setText("1970-00-00");
+		iataCode.setEditable(this.editFlight);
+		flightNumber.setEditable(this.editFlight);
+		
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -354,6 +360,8 @@ public class ItemDetail extends JDialog {
 				
 				buttonPane.add(bDep);
 				buttonPane.add(bArr);
+				
+				setDepFlight(true);
 			}
 		}
 	}
@@ -432,9 +440,6 @@ public class ItemDetail extends JDialog {
 	
 	private void setDepFlight(boolean depFlight) {
 		this.depFlight = depFlight;
-		
-		iataCode.setEditable(false);
-		flightNumber.setEditable(false);
 		
 		for (JTextField t: new JTextField[] {
 				sDepTime,
