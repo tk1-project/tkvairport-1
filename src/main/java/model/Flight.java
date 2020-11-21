@@ -12,7 +12,7 @@ public class Flight implements Serializable {
 	}
 	
 	public Flight(String iataCode, String airline, String model, String flightNumber, String departureAirport, 
-			String arrivalAirport, LocalDate originDate, FlightStatus status, LocalDateTime sTime, String terminal, ArrayList<String> gates) {
+			String arrivalAirport, LocalDate originDate, FlightStatus status, LocalDateTime sTime, String terminal, String gates, LocalDateTime eTime) {
 		this.iataCode = iataCode;
 		this.airline = airline;
 		this.model = model;
@@ -25,6 +25,7 @@ public class Flight implements Serializable {
 		this.sTime = sTime;
 		this.terminal = terminal;
 		this.gates = gates;
+		this.eTime = eTime;
 	}
 	
 	private String iataCode;
@@ -38,7 +39,8 @@ public class Flight implements Serializable {
 	
 	private LocalDateTime sTime;
 	private String terminal;
-	private ArrayList<String> gates;
+	private String gates;
+	private LocalDateTime eTime;
 	
 	public String getIataCode() {
 		return iataCode;
@@ -120,12 +122,20 @@ public class Flight implements Serializable {
 		this.terminal = terminal;
 	}
 
-	public ArrayList<String> getGates() {
+	public String getGates() {
 		return gates;
 	}
 
-	public void setGates(ArrayList<String> gates) {
+	public void setGates(String gates) {
 		this.gates = gates;
+	}
+	
+	public LocalDateTime geteTime() {
+		return eTime;
+	}
+	
+	public void seteTime(LocalDateTime eTime) {
+		this.eTime = eTime;
 	}
 	
 }

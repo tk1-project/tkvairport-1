@@ -22,6 +22,8 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 	private static ClientUI ui;
 	
+	public IFlightServer stub;
+	
 	private static final String HOSTNAME = "localhost";
 	private static final int PORT = 1099;
 	
@@ -67,6 +69,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 			}
 		}
 		logger.log(Level.INFO, "Flight updated: " + flight.toString());
+		ui.receiveFlights(new ArrayList<>(this.flights.values()));
 	}
 
 	public void startup() {
@@ -75,7 +78,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		try {
 			registry = LocateRegistry.getRegistry("localhost",1090);
 			
-			IFlightServer stub = (IFlightServer) registry
+			stub = (IFlightServer) registry
 					.lookup("Flight Server");
 			
 			stub.login(this.clientName, this);
@@ -98,7 +101,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		try {
 			String clientname = UUID.randomUUID().toString();
 			FlightClient client = new FlightClient(clientname);
-			ui = new ClientUI();
+			ui = new ClientUI(client);
 					
 			client.startup();
 		} catch (Exception ex) {

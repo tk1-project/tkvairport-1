@@ -1,15 +1,32 @@
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+import model.ArrivalFlight;
+import model.DepartureFlight;
+import model.Flight;
+import model.FlightStatus;
+
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 import javax.swing.JTextField;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
@@ -17,32 +34,38 @@ import javax.swing.JComboBox;
 public class ItemDetail extends JDialog {
 
 	private final JPanel wrapper = new JPanel();
-	private JTextField textField;
-	private JTextField textField_1;
-	private JTextField textField_2;
-	private JTextField textField_4;
-	private JTextField textField_5;
-	private JTextField textField_6;
-	private JTextField textField_8;
-	private JTextField textField_10;
-	private JTextField textField_11;
-	private JTextField textField_12;
-	private JTextField textField_13;
-	private JTextField textField_14;
-	private JTextField textField_15;
-	private JTextField textField_16;
-	private JTextField textField_17;
-	private JTextField textField_18;
-	private JTextField textField_20;
-	private JTextField textField_22;
-	private JTextField textField_23;
-	private JComboBox comboBox;
-
+	private JTextField iataCode;
+	private JTextField airline;
+	private JTextField model;
+	private JTextField flightNumber;
+	private JTextField departureAirport;
+	private JTextField arrivalAirport;
+	private JTextField originDate;
+	private JTextField sDepTime;
+	private JTextField sArrTime;
+	private JTextField depTerminal;
+	private JTextField arrTerminal;
+	private JTextField depGates;
+	private JTextField arrGates;
+	private JTextField eDeparture;
+	private JTextField eArrival;
+	private JTextField cLocation;
+	private JTextField cCounter;
+	private JTextField cTimeMin;
+	private JTextField cTimeMax;
+	private JComboBox flightStates;
 	
+	JRadioButton bArr, bDep;
+	
+	private boolean depFlight;
+	
+	private ClientUI ui;
+
+
 	/*private class Constraints extends GridBagConstraints {
-		
+
 		public Constraints(int gridx, int gridy) {
-			
+
 			this.gridx = gridx;
 	        this.gridy = gridy;
 	        this.gridwidth = 1;
@@ -60,21 +83,22 @@ public class ItemDetail extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public ItemDetail() {
+	public ItemDetail(ClientUI ui) {
 		
-		
+		this.ui = ui;
+
 		setBounds(150, 150, 800, 600);
 		getContentPane().setLayout(new BorderLayout());
 		wrapper.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(wrapper, BorderLayout.NORTH);
-		
+
 		GridBagLayout gbl_wrapper = new GridBagLayout();
 		gbl_wrapper.columnWidths = new int[]{0, 20, 0, 0, 0};
 		gbl_wrapper.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_wrapper.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
 		gbl_wrapper.rowWeights = new double[]{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		wrapper.setLayout(gbl_wrapper);
-		
+
 		JLabel[] label = new JLabel[] {
 				new JLabel("IATA Code"),
 				new JLabel("Operating Airline"),
@@ -97,7 +121,7 @@ public class ItemDetail extends JDialog {
 				new JLabel("Check-in End"),
 				new JLabel("Flight States")
 		};
-		
+
 		GridBagConstraints[] gbc = new GridBagConstraints[] {
 				new GridBagConstraints(0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
 				new GridBagConstraints(2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
@@ -119,234 +143,392 @@ public class ItemDetail extends JDialog {
 				new GridBagConstraints(0,11,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
 				new GridBagConstraints(2,11,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
 				new GridBagConstraints(0,12,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
-				
+
 		};
-		
+
 		for(int num = 0; num < label.length; num++) {
 			wrapper.add(label[num], gbc[num]);
 		}
-		
+
 		JTextField[] text = new JTextField[20];
 
 		{
-			textField = new JTextField();
-			textField.setHorizontalAlignment(SwingConstants.LEFT);
+			iataCode = new JTextField();
+			iataCode.setHorizontalAlignment(SwingConstants.LEFT);
 			GridBagConstraints gbc_textField = new GridBagConstraints();
 			gbc_textField.insets = new Insets(0, 0, 5, 5);
 			gbc_textField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField.gridx = 1;
 			gbc_textField.gridy = 0;
-			wrapper.add(textField, gbc_textField);
-			textField.setColumns(10);
+			wrapper.add(iataCode, gbc_textField);
+			iataCode.setColumns(10);
 		}
 		{
-			textField_1 = new JTextField();
+			airline = new JTextField();
 			GridBagConstraints gbc_textField_1 = new GridBagConstraints();
 			gbc_textField_1.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_1.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_1.gridx = 3;
 			gbc_textField_1.gridy = 0;
-			wrapper.add(textField_1, gbc_textField_1);
-			textField_1.setColumns(10);
+			wrapper.add(airline, gbc_textField_1);
+			airline.setColumns(10);
 		}
 
 		{
-			textField_2 = new JTextField();
+			model = new JTextField();
 			GridBagConstraints gbc_textField_2 = new GridBagConstraints();
 			gbc_textField_2.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_2.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_2.gridx = 1;
 			gbc_textField_2.gridy = 1;
-			wrapper.add(textField_2, gbc_textField_2);
-			textField_2.setColumns(10);
+			wrapper.add(model, gbc_textField_2);
+			model.setColumns(10);
 		}
 
 		{
-			textField_4 = new JTextField();
+			flightNumber = new JTextField();
 			GridBagConstraints gbc_textField_4 = new GridBagConstraints();
 			gbc_textField_4.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_4.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_4.gridx = 1;
 			gbc_textField_4.gridy = 2;
-			wrapper.add(textField_4, gbc_textField_4);
-			textField_4.setColumns(10);
+			wrapper.add(flightNumber, gbc_textField_4);
+			flightNumber.setColumns(10);
 		}
 
 		{
-			textField_5 = new JTextField();
+			departureAirport = new JTextField();
 			GridBagConstraints gbc_textField_5 = new GridBagConstraints();
 			gbc_textField_5.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_5.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_5.gridx = 1;
 			gbc_textField_5.gridy = 3;
-			wrapper.add(textField_5, gbc_textField_5);
-			textField_5.setColumns(10);
+			wrapper.add(departureAirport, gbc_textField_5);
+			departureAirport.setColumns(10);
 		}
 		{
-			textField_6 = new JTextField();
+			arrivalAirport = new JTextField();
 			GridBagConstraints gbc_textField_6 = new GridBagConstraints();
 			gbc_textField_6.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_6.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_6.gridx = 3;
 			gbc_textField_6.gridy = 3;
-			wrapper.add(textField_6, gbc_textField_6);
-			textField_6.setColumns(10);
+			wrapper.add(arrivalAirport, gbc_textField_6);
+			arrivalAirport.setColumns(10);
 		}
 		{
-			textField_8 = new JTextField();
+			originDate = new JTextField();
 			GridBagConstraints gbc_textField_8 = new GridBagConstraints();
 			gbc_textField_8.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_8.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_8.gridx = 1;
 			gbc_textField_8.gridy = 4;
-			wrapper.add(textField_8, gbc_textField_8);
-			textField_8.setColumns(10);
+			wrapper.add(originDate, gbc_textField_8);
+			originDate.setColumns(10);
 		}
 		{
-			textField_10 = new JTextField();
+			sDepTime = new JTextField();
 			GridBagConstraints gbc_textField_10 = new GridBagConstraints();
 			gbc_textField_10.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_10.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_10.gridx = 1;
 			gbc_textField_10.gridy = 5;
-			wrapper.add(textField_10, gbc_textField_10);
-			textField_10.setColumns(10);
+			wrapper.add(sDepTime, gbc_textField_10);
+			sDepTime.setColumns(10);
 		}
 		{
-			textField_11 = new JTextField();
+			sArrTime = new JTextField();
 			GridBagConstraints gbc_textField_11 = new GridBagConstraints();
 			gbc_textField_11.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_11.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_11.gridx = 3;
 			gbc_textField_11.gridy = 5;
-			wrapper.add(textField_11, gbc_textField_11);
-			textField_11.setColumns(10);
+			wrapper.add(sArrTime, gbc_textField_11);
+			sArrTime.setColumns(10);
 		}
 		{
-			textField_12 = new JTextField();
+			depTerminal = new JTextField();
 			GridBagConstraints gbc_textField_12 = new GridBagConstraints();
 			gbc_textField_12.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_12.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_12.gridx = 1;
 			gbc_textField_12.gridy = 6;
-			wrapper.add(textField_12, gbc_textField_12);
-			textField_12.setColumns(10);
+			wrapper.add(depTerminal, gbc_textField_12);
+			depTerminal.setColumns(10);
 		}
 		{
-			textField_13 = new JTextField();
+			arrTerminal = new JTextField();
 			GridBagConstraints gbc_textField_13 = new GridBagConstraints();
 			gbc_textField_13.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_13.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_13.gridx = 3;
 			gbc_textField_13.gridy = 6;
-			wrapper.add(textField_13, gbc_textField_13);
-			textField_13.setColumns(10);
+			wrapper.add(arrTerminal, gbc_textField_13);
+			arrTerminal.setColumns(10);
 		}
 		{
-			textField_14 = new JTextField();
+			depGates = new JTextField();
 			GridBagConstraints gbc_textField_14 = new GridBagConstraints();
 			gbc_textField_14.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_14.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_14.gridx = 1;
 			gbc_textField_14.gridy = 7;
-			wrapper.add(textField_14, gbc_textField_14);
-			textField_14.setColumns(10);
+			wrapper.add(depGates, gbc_textField_14);
+			depGates.setColumns(10);
 		}
 		{
-			textField_15 = new JTextField();
+			arrGates = new JTextField();
 			GridBagConstraints gbc_textField_15 = new GridBagConstraints();
 			gbc_textField_15.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_15.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_15.gridx = 3;
 			gbc_textField_15.gridy = 7;
-			wrapper.add(textField_15, gbc_textField_15);
-			textField_15.setColumns(10);
+			wrapper.add(arrGates, gbc_textField_15);
+			arrGates.setColumns(10);
 		}
 		{
-			textField_16 = new JTextField();
+			eDeparture = new JTextField();
 			GridBagConstraints gbc_textField_16 = new GridBagConstraints();
 			gbc_textField_16.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_16.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_16.gridx = 1;
 			gbc_textField_16.gridy = 8;
-			wrapper.add(textField_16, gbc_textField_16);
-			textField_16.setColumns(10);
+			wrapper.add(eDeparture, gbc_textField_16);
+			eDeparture.setColumns(10);
 		}
 		{
-			textField_17 = new JTextField();
+			eArrival = new JTextField();
 			GridBagConstraints gbc_textField_17 = new GridBagConstraints();
 			gbc_textField_17.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_17.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_17.gridx = 3;
 			gbc_textField_17.gridy = 8;
-			wrapper.add(textField_17, gbc_textField_17);
-			textField_17.setColumns(10);
+			wrapper.add(eArrival, gbc_textField_17);
+			eArrival.setColumns(10);
 		}
 		{
-			textField_18 = new JTextField();
+			cLocation = new JTextField();
 			GridBagConstraints gbc_textField_18 = new GridBagConstraints();
 			gbc_textField_18.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_18.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_18.gridx = 1;
 			gbc_textField_18.gridy = 9;
-			wrapper.add(textField_18, gbc_textField_18);
-			textField_18.setColumns(10);
+			wrapper.add(cLocation, gbc_textField_18);
+			cLocation.setColumns(10);
 		}
 		{
-			textField_20 = new JTextField();
+			cCounter = new JTextField();
 			GridBagConstraints gbc_textField_20 = new GridBagConstraints();
 			gbc_textField_20.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_20.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_20.gridx = 1;
 			gbc_textField_20.gridy = 10;
-			wrapper.add(textField_20, gbc_textField_20);
-			textField_20.setColumns(10);
+			wrapper.add(cCounter, gbc_textField_20);
+			cCounter.setColumns(10);
 		}
 		{
-			textField_22 = new JTextField();
+			cTimeMin = new JTextField();
 			GridBagConstraints gbc_textField_22 = new GridBagConstraints();
 			gbc_textField_22.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_22.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_22.gridx = 1;
 			gbc_textField_22.gridy = 11;
-			wrapper.add(textField_22, gbc_textField_22);
-			textField_22.setColumns(10);
+			wrapper.add(cTimeMin, gbc_textField_22);
+			cTimeMin.setColumns(10);
 		}
 		{
-			textField_23 = new JTextField();
+			cTimeMax = new JTextField();
 			GridBagConstraints gbc_textField_23 = new GridBagConstraints();
 			gbc_textField_23.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_23.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_23.gridx = 3;
 			gbc_textField_23.gridy = 11;
-			wrapper.add(textField_23, gbc_textField_23);
-			textField_23.setColumns(10);
+			wrapper.add(cTimeMax, gbc_textField_23);
+			cTimeMax.setColumns(10);
 		}
 		{
-			comboBox = new JComboBox();
+			flightStates = new JComboBox(FlightStatus.getValues());
 			GridBagConstraints gbc_comboBox = new GridBagConstraints();
 			gbc_comboBox.gridwidth = 3;
 			gbc_comboBox.insets = new Insets(0, 0, 0, 5);
 			gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
 			gbc_comboBox.gridx = 1;
 			gbc_comboBox.gridy = 12;
-			wrapper.add(comboBox, gbc_comboBox);
-		}
+			wrapper.add(flightStates, gbc_comboBox);
+		}		
+		
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
-				JButton btn_ccl = new JButton("Cancel");
-				btn_ccl.setActionCommand("Cancel");
-				buttonPane.add(btn_ccl);
+				
+				JButton btn_ccl = addButton("Cancel");
+		        buttonPane.add(btn_ccl);
+		        
 			}
 			{
-				JButton btn_save = new JButton("Save");
-				btn_save.setActionCommand("Save");
-				buttonPane.add(btn_save);
+
+				JButton btn_save = addButton("Save");
+		        buttonPane.add(btn_save);
+				
 				getRootPane().setDefaultButton(btn_save);
 			}
+			{
+				ButtonGroup bGroup = new ButtonGroup();
+				
+				bDep = new JRadioButton("Departure");
+				bDep.setSelected(true);
+				
+				bDep.addActionListener(new ActionListener() {
+			        @Override
+			        public void actionPerformed(ActionEvent e) {
+			            setDepFlight(true);
+			        }
+			    });
+				
+				bArr = new JRadioButton("Arrival");
+				
+				bArr.addActionListener(new ActionListener() {
+			        @Override
+			        public void actionPerformed(ActionEvent e) {
+			        	setDepFlight(false);
+			        }
+			    });
+				
+				bGroup.add(bDep);
+				bGroup.add(bArr);
+				
+				buttonPane.add(bDep);
+				buttonPane.add(bArr);
+			}
+		}
+	}
+
+	public void addFlightData(Flight f) {
+		if(f != null) {
+			iataCode.setText(f.getIataCode());
+			airline.setText(f.getAirline());
+			model.setText(f.getModel());
+			flightNumber.setText(f.getFlightNumber());
+			departureAirport.setText(f.getDepartureAirport());
+			arrivalAirport.setText(f.getArrivalAirport());
+			originDate.setText(f.getOriginDate().toString());
+			flightStates.setSelectedItem(f.getStatus().getText());
+			
+			
+			if (f instanceof DepartureFlight) {
+				setDepFlight(true);
+				DepartureFlight handle = (DepartureFlight) f;
+				sDepTime.setText(handle.getsTime().toString());
+				depTerminal.setText(handle.getTerminal());
+				depGates.setText(handle.getGates());
+				eDeparture.setText(handle.geteTime().toString());
+				cLocation.setText(handle.getcLocation());
+				cCounter.setText(handle.getcCounter());
+				cTimeMin.setText(handle.getcTimeMin().toString());
+				cTimeMax.setText(handle.getcTimeMax().toString());
+				
+			} else if (f instanceof ArrivalFlight) {
+				setDepFlight(false);
+				sArrTime.setText(f.getsTime().toString());
+				arrTerminal.setText(f.getTerminal());
+				arrGates.setText(f.getGates());
+				eArrival.setText(f.geteTime().toString());
+			}
+		}
+	}
+	
+	private JButton addButton(String text) {
+		JButton button = new JButton(text);
+		if (text == "Cancel") {
+			button.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					System.out.println("Cancel...");
+					setVisible(false);
+				}
+			});
+		} else if(text == "Save") {
+			button.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					System.out.println("Save...");
+					// todo: construct a flight object out of all data in the window
+					
+					// todo: check if arrival or departure
+					Flight f;
+					if(areDateFormatsValid() && depFlight) {
+						f = new DepartureFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
+								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
+								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sDepTime.getText()), 
+								depTerminal.getText(), depGates.getText(), LocalDateTime.parse(eDeparture.getText()), cLocation.getText(), 
+								cCounter.getText(), LocalDateTime.parse(cTimeMin.getText()), LocalDateTime.parse(cTimeMax.getText()));
+						ui.updateFlight(f);
+						setVisible(false);
+					} else if (areDateFormatsValid() && depFlight) {
+						f = new ArrivalFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
+								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
+								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sArrTime.getText()), 
+								arrTerminal.getText(), arrGates.getText(), LocalDateTime.parse(eArrival.getText()));
+
+						ui.updateFlight(f);
+						setVisible(false);
+					}
+					
+					
+				}
+			});
+		}
+		return button;
+	}
+	
+	private void setDepFlight(boolean depFlight) {
+		this.depFlight = depFlight;
+		
+		iataCode.setEditable(false);
+		flightNumber.setEditable(false);
+		
+		for (JTextField t: new JTextField[] {
+				sDepTime,
+				depTerminal,
+				depGates,
+				eDeparture,
+				cLocation,
+				cCounter,
+				cTimeMin,
+				cTimeMax
+		}) {
+			bDep.setSelected(depFlight);
+			t.setEditable(depFlight);
+			
+		}
+		
+		for (JTextField t: new JTextField[] {
+				sArrTime,
+				arrTerminal,
+				arrGates,
+				eArrival
+		}) {
+			bArr.setSelected(!depFlight);
+			t.setEditable(!depFlight);
+		}
+	}
+	
+	private boolean areDateFormatsValid() {
+		try {
+			LocalDate.parse(originDate.getText());
+			if (depFlight) {
+				LocalDateTime.parse(sDepTime.getText());
+				LocalDateTime.parse(eDeparture.getText());
+				LocalDateTime.parse(cTimeMin.getText());
+				LocalDateTime.parse(cTimeMax.getText());
+			} else {
+				LocalDateTime.parse(sArrTime.getText());
+				LocalDateTime.parse(eArrival.getText());
+			}
+			return true;	
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 }

@@ -17,6 +17,7 @@ import javax.swing.JDialog;
 
 import java.awt.event.ActionListener;
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,7 +44,10 @@ public class ClientUI implements Serializable {
 	
 	private List<Flight> flights;
 
-	public ClientUI() {
+	private FlightClient client;
+	
+	public ClientUI(FlightClient client) {
+		this.client = client;
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -55,6 +59,7 @@ public class ClientUI implements Serializable {
 	public void receiveFlights(List<Flight> flights) {
 		this.flights = flights; 
 		logger.log(Level.INFO, "Flights received: " + this.flights.toString());
+		addData();
 	}
 	
 	private void addComponentsToPane(Container pane) {
@@ -92,18 +97,80 @@ public class ClientUI implements Serializable {
 		
 	}
 	
+	private ClientUI getClientUI() {
+		return this;
+	}
+	
 	private JButton addButton(String text) {
 		JButton button = new JButton(text);
 		if (text == "New") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					ItemDetail dialog = new ItemDetail();
+					ItemDetail dialog = new ItemDetail(getClientUI());
 					dialog.setBounds(150, 150, 800, 600);
 					dialog.setVisible(true);
 				}
 			});
+		} else if(text == "Edit") {
+			button.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					ItemDetail dialog = new ItemDetail(getClientUI());
+					int rowNumber = table.getSelectedRow();
+					if(rowNumber >= 0) {
+						String iataCode = table.getValueAt(rowNumber, 1).toString();
+						String flightNumber = table.getValueAt(rowNumber, 2).toString();
+						System.out.println("iataCode: " + iataCode);
+						System.out.println("flightNumber: " + flightNumber);
+						for(Flight f: flights) {
+							if(f.getIataCode() == iataCode && f.getFlightNumber() == flightNumber) {
+
+								dialog.addFlightData(f);
+								break;
+							}
+						}
+					}
+					dialog.setBounds(150, 150, 800, 600);
+					dialog.setVisible(true);
+				}
+			});
+		} else if (text == "Delete") {
+			button.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent evt) {
+					int rowNumber = table.getSelectedRow();
+					if(rowNumber >= 0) {
+						String iataCode = table.getValueAt(rowNumber, 1).toString();
+						String flightNumber = table.getValueAt(rowNumber, 2).toString();
+						System.out.println("iataCode: " + iataCode);
+						System.out.println("flightNumber: " + flightNumber);
+						for(Flight f: flights) {
+							if(f.getIataCode() == iataCode && f.getFlightNumber() == flightNumber) {
+								flights.remove(f);
+								
+								if(client != null) {
+									try {
+										client.stub.deleteFlight(client.getClientName(), f);
+									} catch (RemoteException e) {
+										e.printStackTrace();
+									}
+								}
+								break;
+							}
+						}
+					}
+				}
+			});
 		}
 		return button;
+	}
+	
+	public void updateFlight(Flight f) {
+		try {
+			this.client.stub.updateFlight(this.client.getClientName(), f);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void actionPerformed(ActionEvent event) {
