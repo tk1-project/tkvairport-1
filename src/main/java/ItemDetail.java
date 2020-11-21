@@ -460,6 +460,22 @@ public class ItemDetail extends JDialog {
 			bArr.setSelected(!depFlight);
 			t.setEditable(!depFlight);
 		}
+		
+		if (depFlight) {
+			sDepTime.setText("1970-00-00T00:00");
+			eDeparture.setText("1970-00-00T00:00");
+			cTimeMin.setText("1970-00-00T00:00");
+			cTimeMax.setText("1970-00-00T00:00");
+			sArrTime.setText(null);
+			eArrival.setText(null);
+		} else {
+			sDepTime.setText(null);
+			eDeparture.setText(null);
+			cTimeMin.setText(null);
+			cTimeMax.setText(null);
+			sArrTime.setText("1970-00-00T00:00");
+			eArrival.setText("1970-00-00T00:00");
+		}
 	}
 	
 	private boolean areDateFormatsValid() {
