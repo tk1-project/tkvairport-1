@@ -1,9 +1,13 @@
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import model.ArrivalFlight;
@@ -29,18 +33,21 @@ import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.event.WindowListener;
+import java.awt.event.WindowEvent;
 
 public class ClientUI implements Serializable {
 	
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 
 	private JFrame frame;
-	private JDialog dialog;
 	private myTableModel tableModel;
 	private JScrollPane tableScroll;
 	private JTable table;
 	private JPanel wrapper, buttonWrapper;
 	private JButton btn_new, btn_edit, btn_del;
+	private boolean rowSelected;
 	
 	private List<Flight> flights;
 
@@ -56,7 +63,7 @@ public class ClientUI implements Serializable {
 		});
 	}	
 	
-	public void receiveFlights(List<Flight> flights) {
+	public void updateUI(List<Flight> flights) {
 		this.flights = flights; 
 		logger.log(Level.INFO, "Flights received: " + this.flights.toString());
 		addData();
@@ -72,12 +79,22 @@ public class ClientUI implements Serializable {
 		table = new JTable(tableModel);
 		tableScroll = new JScrollPane(table);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		
         tableScroll = new JScrollPane(table, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         tableScroll.setBorder(null);
         table.getTableHeader().setReorderingAllowed(false);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+				if(lsm.isSelectionEmpty()) {
+					rowSelected = false;
+				} else {
+					rowSelected = true;
+				}
+			}
+		});
         table.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
         table.setRowHeight(20);
         table.setRowMargin(2);
@@ -94,7 +111,6 @@ public class ClientUI implements Serializable {
         
         btn_del = addButton("Delete");
         buttonWrapper.add(btn_del); 
-		
 	}
 	
 	private ClientUI getClientUI() {
@@ -106,7 +122,7 @@ public class ClientUI implements Serializable {
 		if (text == "New") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					ItemDetail dialog = new ItemDetail(getClientUI());
+					ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Add New Flight");
 					dialog.setBounds(150, 150, 800, 600);
 					dialog.setVisible(true);
 				}
@@ -114,9 +130,9 @@ public class ClientUI implements Serializable {
 		} else if(text == "Edit") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					ItemDetail dialog = new ItemDetail(getClientUI());
 					int rowNumber = table.getSelectedRow();
-					if(rowNumber >= 0) {
+					if(rowNumber >= 0 && rowSelected) {
+						ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Edit Flight");
 						String iataCode = table.getValueAt(rowNumber, 1).toString();
 						String flightNumber = table.getValueAt(rowNumber, 2).toString();
 						System.out.println("iataCode: " + iataCode);
@@ -128,9 +144,24 @@ public class ClientUI implements Serializable {
 								break;
 							}
 						}
+						dialog.setBounds(150, 150, 800, 600);
+						dialog.setVisible(true);
+					} else {
+						JDialog dialog = new JDialog(frame, "Warning!");
+						dialog.setBounds(350, 350, 300, 100);
+						dialog.getContentPane().setLayout(new BorderLayout());
+							
+						JPanel contentPanel = new JPanel();
+						contentPanel.setLayout(new FlowLayout());
+						contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+						dialog.getContentPane().add(contentPanel, BorderLayout.CENTER);
+						{
+							JLabel lblPleaseSelectA = new JLabel("Please select a flight!");
+							contentPanel.add(lblPleaseSelectA);
+						}
+						dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+						dialog.setVisible(true);
 					}
-					dialog.setBounds(150, 150, 800, 600);
-					dialog.setVisible(true);
 				}
 			});
 		} else if (text == "Delete") {
@@ -173,10 +204,6 @@ public class ClientUI implements Serializable {
 		}
 	}
 	
-	public void actionPerformed(ActionEvent event) {
-		
-	}
-	
 	private void addData() {
 		
 		Runnable newdo = new Runnable() {
@@ -213,10 +240,6 @@ public class ClientUI implements Serializable {
         };
         SwingUtilities.invokeLater(newdo);
 	}
-	
-	private void addTableListener() {
-		
-	}
 
  	private void initializeGUI() {
 		
@@ -225,6 +248,24 @@ public class ClientUI implements Serializable {
 		frame.setBounds(100, 100, 800, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		// inform server when client logs out
+		frame.addWindowListener(new WindowListener() {
+			public void windowOpened(WindowEvent e) {}
+	        public void windowIconified(WindowEvent e) {}
+	        public void windowDeiconified(WindowEvent e) {}
+	        public void windowDeactivated(WindowEvent e) {}
+	        public void windowClosed(WindowEvent e) {}
+	        public void windowActivated(WindowEvent e) {}
+			@Override
+			public void windowClosing(WindowEvent e) {
+				try {
+					client.stub.logout(client.getClientName());
+				} catch (RemoteException ex) {
+					ex.printStackTrace();
+				}
+			}	
+		});
+		
 		addComponentsToPane(frame.getContentPane());	
 		addData();
 		frame.setVisible(true);
@@ -232,6 +273,7 @@ public class ClientUI implements Serializable {
 	
 	private class myTableModel extends AbstractTableModel {
 		
+		private static final long serialVersionUID = 1L;
 		private Vector<Vector<Object>> data;
 		private Vector<String> colNames;
 		

@@ -26,6 +26,8 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 	private Map<String, IFlightClient> clients;
 	private Map<String, Flight> flights;
 	private static Registry r;
+	
+	private static final int PORT = 1099;
 
 
 	protected FlightServer() throws RemoteException {
@@ -41,20 +43,20 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 //		LocalDate originDate, FlightStatus status, LocalDateTime sTime, String terminal, ArrayList<String> gates, LocalDateTime eTime		
 		
 		Flight[] initialFlights = new Flight[] {
-				new DepartureFlight("LH", "Lufthansa", "A380", "591", "NBO", "FRA", 
-						LocalDate.of(2020, 11, 11), FlightStatus.B, LocalDateTime.of(2020, 11, 11, 12, 0), "terminal", "A15, A16, A17", 
-						LocalDateTime.of(2020,  11, 11, 13, 0), "cLocation", "cCounter", LocalDateTime.of(2020, 11, 11, 13, 0), 
-						LocalDateTime.of(2020, 11, 11, 13, 0)),
-				new ArrivalFlight("LH", "Lufthansa", "A380", "999", "BER", "SFO", 
-						LocalDate.of(2019,  11,  11), FlightStatus.D, LocalDateTime.of(2020, 12, 12, 12, 0), "1", 
-						"B55, B76", LocalDateTime.of(2020,  12, 12, 13, 0)),
-				new DepartureFlight("KLM", "KLM Netherlands", "E190", "1407", "AMS", "FRA", 
-						LocalDate.of(2020, 11, 13), FlightStatus.B, LocalDateTime.of(2020, 11, 11, 12, 0), "terminal", "A12, A13", 
-						LocalDateTime.of(2020,  11, 11, 13, 0), "cLocation", "cCounter", LocalDateTime.of(2020, 11, 11, 13, 0), 
-						LocalDateTime.of(2020, 11, 11, 13, 0)),
-				new ArrivalFlight("LH", "Lufthansa", "A380", "1171", "BER", "SFO", 
-						LocalDate.of(2019,  11,  15), FlightStatus.D, LocalDateTime.of(2020, 12, 12, 12, 0), "1", 
-						"C1, C2, C3", LocalDateTime.of(2020,  12, 12, 13, 0))
+				new DepartureFlight("LH", "Lufthansa", "A380", "591", "TK", "FRA", 
+						LocalDate.of(2020, 11, 11), FlightStatus.B, LocalDateTime.of(2020, 11, 11, 15, 20), "1", "A03, A04", 
+						LocalDateTime.of(2020,  11, 11, 15, 25), "A", "421-425", LocalDateTime.of(2020, 11, 11, 13, 0), 
+						LocalDateTime.of(2020, 11, 11, 13, 50)),
+				new ArrivalFlight("LH", "Lufthansa", "A380", "999", "BER", "TK", 
+						LocalDate.of(2020,  11,  20), FlightStatus.D, LocalDateTime.of(2020, 11, 20, 9, 50), "2", 
+						"B55, B76", LocalDateTime.of(2020,  11, 20, 9, 47)),
+				new DepartureFlight("KLM", "KLM", "B738", "1407", "TK", "BER", 
+						LocalDate.of(2020, 11, 20), FlightStatus.B, LocalDateTime.of(2020, 11, 20, 11, 50), "1", "A12, A13", 
+						LocalDateTime.of(2020,  11, 20, 11, 45), "C", "1-10", LocalDateTime.of(2020, 11, 20, 10, 10), 
+						LocalDateTime.of(2020, 11, 20, 10, 50)),
+				new ArrivalFlight("LH", "Lufthansa", "A380", "4160", "AMS", "TK", 
+						LocalDate.of(2020,  11,  21), FlightStatus.D, LocalDateTime.of(2020, 11, 21, 12, 0), "1", 
+						"C1, C2, C3", LocalDateTime.of(2020,  11, 21, 12, 5))
 		};
 		
 		for(Flight f: initialFlights) {
@@ -130,7 +132,7 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 			// 		.exportObject((IFlightServer) flightserver, 0);
 			
 			// create a local registry
-			Registry registry = LocateRegistry.createRegistry(1090);
+			Registry registry = LocateRegistry.createRegistry(PORT);
 
 			// Registry registry = LocateRegistry.getRegistry();
 			

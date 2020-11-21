@@ -4,11 +4,10 @@ import java.awt.FlowLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import model.ArrivalFlight;
 import model.DepartureFlight;
@@ -25,10 +24,8 @@ import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-
-import javax.swing.JTextPane;
-import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 
 public class ItemDetail extends JDialog {
@@ -61,42 +58,21 @@ public class ItemDetail extends JDialog {
 	
 	private ClientUI ui;
 
-
-	/*private class Constraints extends GridBagConstraints {
-
-		public Constraints(int gridx, int gridy) {
-
-			this.gridx = gridx;
-	        this.gridy = gridy;
-	        this.gridwidth = 1;
-	        this.gridheight = 1;
-	        this.fill = NONE;
-	        this.ipadx = 20;
-	        this.ipady = 16;
-	        this.insets = new Insets(0, 0, 5, 5);
-	        this.anchor  = EAST;
-	        this.weightx = 0;
-	        this.weighty = 0;
-		}
-	}*/
-
-	/**
-	 * Create the dialog.
-	 */
-	public ItemDetail(ClientUI ui) {
-		
+	public ItemDetail(ClientUI ui, JFrame frame, String title) {
+		super(frame, title);
 		this.ui = ui;
-
+		
+		initializeGUI();
+	}
+	
+	private void initializeGUI() {
 		setBounds(150, 150, 800, 600);
 		getContentPane().setLayout(new BorderLayout());
 		wrapper.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(wrapper, BorderLayout.NORTH);
 
 		GridBagLayout gbl_wrapper = new GridBagLayout();
-		gbl_wrapper.columnWidths = new int[]{0, 20, 0, 0, 0};
-		gbl_wrapper.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gbl_wrapper.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_wrapper.rowWeights = new double[]{0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_wrapper.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0};
 		wrapper.setLayout(gbl_wrapper);
 
 		JLabel[] label = new JLabel[] {
@@ -106,8 +82,8 @@ public class ItemDetail extends JDialog {
 				new JLabel("Tracking Number"),
 				new JLabel("Departure Airport"),
 				new JLabel("Arrival Airport"),
-				new JLabel("Origin Data"),
-				new JLabel("Scheduled Departure Time"),
+				new JLabel("Origin Date"),
+				new JLabel("Scheduled Departure"),
 				new JLabel("Scheduled Arrival"),
 				new JLabel("Departure Terminal"),
 				new JLabel("Arrival Terminal"),
@@ -149,14 +125,10 @@ public class ItemDetail extends JDialog {
 		for(int num = 0; num < label.length; num++) {
 			wrapper.add(label[num], gbc[num]);
 		}
-
-		JTextField[] text = new JTextField[20];
-
+		
 		{
 			iataCode = new JTextField();
-			iataCode.setHorizontalAlignment(SwingConstants.LEFT);
 			GridBagConstraints gbc_textField = new GridBagConstraints();
-			gbc_textField.insets = new Insets(0, 0, 5, 5);
 			gbc_textField.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField.gridx = 1;
 			gbc_textField.gridy = 0;
@@ -166,7 +138,6 @@ public class ItemDetail extends JDialog {
 		{
 			airline = new JTextField();
 			GridBagConstraints gbc_textField_1 = new GridBagConstraints();
-			gbc_textField_1.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_1.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_1.gridx = 3;
 			gbc_textField_1.gridy = 0;
@@ -177,7 +148,6 @@ public class ItemDetail extends JDialog {
 		{
 			model = new JTextField();
 			GridBagConstraints gbc_textField_2 = new GridBagConstraints();
-			gbc_textField_2.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_2.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_2.gridx = 1;
 			gbc_textField_2.gridy = 1;
@@ -188,7 +158,6 @@ public class ItemDetail extends JDialog {
 		{
 			flightNumber = new JTextField();
 			GridBagConstraints gbc_textField_4 = new GridBagConstraints();
-			gbc_textField_4.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_4.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_4.gridx = 1;
 			gbc_textField_4.gridy = 2;
@@ -199,7 +168,6 @@ public class ItemDetail extends JDialog {
 		{
 			departureAirport = new JTextField();
 			GridBagConstraints gbc_textField_5 = new GridBagConstraints();
-			gbc_textField_5.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_5.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_5.gridx = 1;
 			gbc_textField_5.gridy = 3;
@@ -209,7 +177,6 @@ public class ItemDetail extends JDialog {
 		{
 			arrivalAirport = new JTextField();
 			GridBagConstraints gbc_textField_6 = new GridBagConstraints();
-			gbc_textField_6.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_6.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_6.gridx = 3;
 			gbc_textField_6.gridy = 3;
@@ -219,7 +186,6 @@ public class ItemDetail extends JDialog {
 		{
 			originDate = new JTextField();
 			GridBagConstraints gbc_textField_8 = new GridBagConstraints();
-			gbc_textField_8.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_8.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_8.gridx = 1;
 			gbc_textField_8.gridy = 4;
@@ -229,7 +195,6 @@ public class ItemDetail extends JDialog {
 		{
 			sDepTime = new JTextField();
 			GridBagConstraints gbc_textField_10 = new GridBagConstraints();
-			gbc_textField_10.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_10.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_10.gridx = 1;
 			gbc_textField_10.gridy = 5;
@@ -239,7 +204,6 @@ public class ItemDetail extends JDialog {
 		{
 			sArrTime = new JTextField();
 			GridBagConstraints gbc_textField_11 = new GridBagConstraints();
-			gbc_textField_11.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_11.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_11.gridx = 3;
 			gbc_textField_11.gridy = 5;
@@ -249,7 +213,6 @@ public class ItemDetail extends JDialog {
 		{
 			depTerminal = new JTextField();
 			GridBagConstraints gbc_textField_12 = new GridBagConstraints();
-			gbc_textField_12.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_12.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_12.gridx = 1;
 			gbc_textField_12.gridy = 6;
@@ -259,7 +222,6 @@ public class ItemDetail extends JDialog {
 		{
 			arrTerminal = new JTextField();
 			GridBagConstraints gbc_textField_13 = new GridBagConstraints();
-			gbc_textField_13.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_13.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_13.gridx = 3;
 			gbc_textField_13.gridy = 6;
@@ -269,7 +231,6 @@ public class ItemDetail extends JDialog {
 		{
 			depGates = new JTextField();
 			GridBagConstraints gbc_textField_14 = new GridBagConstraints();
-			gbc_textField_14.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_14.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_14.gridx = 1;
 			gbc_textField_14.gridy = 7;
@@ -279,7 +240,6 @@ public class ItemDetail extends JDialog {
 		{
 			arrGates = new JTextField();
 			GridBagConstraints gbc_textField_15 = new GridBagConstraints();
-			gbc_textField_15.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_15.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_15.gridx = 3;
 			gbc_textField_15.gridy = 7;
@@ -289,7 +249,6 @@ public class ItemDetail extends JDialog {
 		{
 			eDeparture = new JTextField();
 			GridBagConstraints gbc_textField_16 = new GridBagConstraints();
-			gbc_textField_16.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_16.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_16.gridx = 1;
 			gbc_textField_16.gridy = 8;
@@ -299,7 +258,6 @@ public class ItemDetail extends JDialog {
 		{
 			eArrival = new JTextField();
 			GridBagConstraints gbc_textField_17 = new GridBagConstraints();
-			gbc_textField_17.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_17.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_17.gridx = 3;
 			gbc_textField_17.gridy = 8;
@@ -309,7 +267,6 @@ public class ItemDetail extends JDialog {
 		{
 			cLocation = new JTextField();
 			GridBagConstraints gbc_textField_18 = new GridBagConstraints();
-			gbc_textField_18.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_18.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_18.gridx = 1;
 			gbc_textField_18.gridy = 9;
@@ -319,7 +276,6 @@ public class ItemDetail extends JDialog {
 		{
 			cCounter = new JTextField();
 			GridBagConstraints gbc_textField_20 = new GridBagConstraints();
-			gbc_textField_20.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_20.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_20.gridx = 1;
 			gbc_textField_20.gridy = 10;
@@ -329,7 +285,6 @@ public class ItemDetail extends JDialog {
 		{
 			cTimeMin = new JTextField();
 			GridBagConstraints gbc_textField_22 = new GridBagConstraints();
-			gbc_textField_22.insets = new Insets(0, 0, 5, 5);
 			gbc_textField_22.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_22.gridx = 1;
 			gbc_textField_22.gridy = 11;
@@ -339,7 +294,6 @@ public class ItemDetail extends JDialog {
 		{
 			cTimeMax = new JTextField();
 			GridBagConstraints gbc_textField_23 = new GridBagConstraints();
-			gbc_textField_23.insets = new Insets(0, 0, 5, 0);
 			gbc_textField_23.fill = GridBagConstraints.HORIZONTAL;
 			gbc_textField_23.gridx = 3;
 			gbc_textField_23.gridy = 11;
@@ -350,7 +304,6 @@ public class ItemDetail extends JDialog {
 			flightStates = new JComboBox(FlightStatus.getValues());
 			GridBagConstraints gbc_comboBox = new GridBagConstraints();
 			gbc_comboBox.gridwidth = 3;
-			gbc_comboBox.insets = new Insets(0, 0, 0, 5);
 			gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
 			gbc_comboBox.gridx = 1;
 			gbc_comboBox.gridy = 12;
@@ -404,7 +357,7 @@ public class ItemDetail extends JDialog {
 			}
 		}
 	}
-
+	
 	public void addFlightData(Flight f) {
 		if(f != null) {
 			iataCode.setText(f.getIataCode());
@@ -452,9 +405,7 @@ public class ItemDetail extends JDialog {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
 					System.out.println("Save...");
-					// todo: construct a flight object out of all data in the window
-					
-					// todo: check if arrival or departure
+
 					Flight f;
 					if(areDateFormatsValid() && depFlight) {
 						f = new DepartureFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
@@ -464,7 +415,7 @@ public class ItemDetail extends JDialog {
 								cCounter.getText(), LocalDateTime.parse(cTimeMin.getText()), LocalDateTime.parse(cTimeMax.getText()));
 						ui.updateFlight(f);
 						setVisible(false);
-					} else if (areDateFormatsValid() && depFlight) {
+					} else if (areDateFormatsValid() && !depFlight) {
 						f = new ArrivalFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
 								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
 								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sArrTime.getText()), 
@@ -473,8 +424,6 @@ public class ItemDetail extends JDialog {
 						ui.updateFlight(f);
 						setVisible(false);
 					}
-					
-					
 				}
 			});
 		}
@@ -515,6 +464,7 @@ public class ItemDetail extends JDialog {
 	
 	private boolean areDateFormatsValid() {
 		try {
+			//TODO: error
 			LocalDate.parse(originDate.getText());
 			if (depFlight) {
 				LocalDateTime.parse(sDepTime.getText());

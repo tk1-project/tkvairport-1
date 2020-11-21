@@ -51,7 +51,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 				this.flights.put(flightKey, f);	
 			}
 		}
-		ui.receiveFlights(new ArrayList<>(this.flights.values()));
+		ui.updateUI(new ArrayList<>(this.flights.values()));
 	}
 
 	@Override
@@ -69,14 +69,14 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 			}
 		}
 		logger.log(Level.INFO, "Flight updated: " + flight.toString());
-		ui.receiveFlights(new ArrayList<>(this.flights.values()));
+		ui.updateUI(new ArrayList<>(this.flights.values()));
 	}
 
 	public void startup() {
 		
 		Registry registry;
 		try {
-			registry = LocateRegistry.getRegistry("localhost",1090);
+			registry = LocateRegistry.getRegistry(HOSTNAME, PORT);
 			
 			stub = (IFlightServer) registry
 					.lookup("Flight Server");
