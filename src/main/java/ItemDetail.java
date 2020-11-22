@@ -1,6 +1,8 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -312,7 +314,7 @@ public class ItemDetail extends JDialog {
 			wrapper.add(flightStates, gbc_comboBox);
 		}		
 		
-		originDate.setText("1970-00-00");
+		originDate.setText("1970-01-01");
 		iataCode.setEditable(this.editFlight);
 		flightNumber.setEditable(this.editFlight);
 		
@@ -415,7 +417,7 @@ public class ItemDetail extends JDialog {
 					System.out.println("Save...");
 
 					Flight f;
-					if(areDateFormatsValid() && depFlight) {
+					if(isDataValid() && depFlight) {
 						f = new DepartureFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
 								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
 								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sDepTime.getText()), 
@@ -423,7 +425,7 @@ public class ItemDetail extends JDialog {
 								cCounter.getText(), LocalDateTime.parse(cTimeMin.getText()), LocalDateTime.parse(cTimeMax.getText()));
 						ui.updateFlight(f);
 						setVisible(false);
-					} else if (areDateFormatsValid() && !depFlight) {
+					} else if (isDataValid() && !depFlight) {
 						f = new ArrivalFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
 								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
 								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sArrTime.getText()), 
@@ -467,10 +469,10 @@ public class ItemDetail extends JDialog {
 		}
 		
 		if (depFlight) {
-			sDepTime.setText("1970-00-00T00:00");
-			eDeparture.setText("1970-00-00T00:00");
-			cTimeMin.setText("1970-00-00T00:00");
-			cTimeMax.setText("1970-00-00T00:00");
+			sDepTime.setText("1970-01-01T00:00");
+			eDeparture.setText("1970-01-01T00:00");
+			cTimeMin.setText("1970-01-01T00:00");
+			cTimeMax.setText("1970-01-01T00:00");
 			sArrTime.setText(null);
 			eArrival.setText(null);
 		} else {
@@ -478,25 +480,65 @@ public class ItemDetail extends JDialog {
 			eDeparture.setText(null);
 			cTimeMin.setText(null);
 			cTimeMax.setText(null);
-			sArrTime.setText("1970-00-00T00:00");
-			eArrival.setText("1970-00-00T00:00");
+			sArrTime.setText("1970-01-01T00:00");
+			eArrival.setText("1970-01-01T00:00");
 		}
 	}
 	
-	private boolean areDateFormatsValid() {
+	private boolean isDataValid() {
 		try {
 			//TODO: error
-			LocalDate.parse(originDate.getText());
-			if (depFlight) {
-				LocalDateTime.parse(sDepTime.getText());
-				LocalDateTime.parse(eDeparture.getText());
-				LocalDateTime.parse(cTimeMin.getText());
-				LocalDateTime.parse(cTimeMax.getText());
-			} else {
-				LocalDateTime.parse(sArrTime.getText());
-				LocalDateTime.parse(eArrival.getText());
+			boolean errorOccured = false;
+			for(JTextField t: new JTextField[] {
+					iataCode,
+					flightNumber
+			}) {
+				if(t.getText() == null || t.getText().length() == 0) {
+					t.setBorder(BorderFactory.createLineBorder(Color.RED));
+					errorOccured = true;
+				} else {
+					t.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+				}
 			}
-			return true;	
+			if (originDate.getText() == null || !originDate.getText().matches("([0-9]{4})-([0-9]{2})-([0-9]{2})")) {
+				originDate.setBorder(BorderFactory.createLineBorder(Color.RED));
+				errorOccured = true;
+			}
+			
+			JTextField[] depFields = new JTextField[] {
+					sDepTime,
+					eDeparture,
+					cTimeMin,
+					cTimeMax
+			};
+			JTextField[] arrFields = new JTextField[] {
+					sArrTime,
+					eArrival
+			};
+			
+			JTextField[] checkFields;
+			JTextField[] resetFields;
+			
+			
+			if (depFlight) {
+				checkFields = depFields;
+				resetFields = arrFields;
+			} else {
+				checkFields = arrFields;
+				resetFields = depFields;
+			}
+			for(JTextField t: resetFields) {
+				t.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+			}
+			for(JTextField t: checkFields) {
+					if(t.getText() == null || !t.getText().matches("([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})")) {
+						t.setBorder(BorderFactory.createLineBorder(Color.RED));
+						errorOccured = true;
+					} else {
+						t.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+					}
+			}
+			return !errorOccured;	
 		} catch(Exception e) {
 			e.printStackTrace();
 			return false;
