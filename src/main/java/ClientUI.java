@@ -10,10 +10,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
-import model.ArrivalFlight;
-import model.DepartureFlight;
 import model.Flight;
-import model.FlightStatus;
 
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
@@ -22,9 +19,6 @@ import javax.swing.JDialog;
 import java.awt.event.ActionListener;
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -63,13 +57,45 @@ public class ClientUI implements Serializable {
 		});
 	}	
 	
+	// initialize the user interface
+	private void initializeGUI() {
+		
+		frame = new JFrame("TK Airport Arrivals / Departures");
+		frame.setBounds(100, 100, 800, 600);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		// inform server when client logs out
+		frame.addWindowListener(new WindowListener() {
+			public void windowOpened(WindowEvent e) {}
+	        public void windowIconified(WindowEvent e) {}
+	        public void windowDeiconified(WindowEvent e) {}
+	        public void windowDeactivated(WindowEvent e) {}
+	        public void windowClosed(WindowEvent e) {}
+	        public void windowActivated(WindowEvent e) {}
+			@Override
+			public void windowClosing(WindowEvent e) {
+				try {
+					client.stub.logout(client.getClientName());
+				} catch (RemoteException ex) {
+					ex.printStackTrace();
+				}
+			}	
+		});
+		
+		addComponents(frame.getContentPane());	
+		addData();
+		frame.setVisible(true);
+	}
+	
+	
 	public void updateUI(List<Flight> flights) {
 		this.flights = flights; 
 		logger.log(Level.INFO, "Flights received: " + this.flights.toString());
 		addData();
 	}
 	
-	private void addComponentsToPane(Container pane) {
+	// add UI components to the UI
+	private void addComponents(Container pane) {
 		
 		wrapper = new JPanel();
 	    wrapper.setLayout(new BorderLayout(5, 5));
@@ -83,7 +109,11 @@ public class ClientUI implements Serializable {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         tableScroll.setBorder(null);
         table.getTableHeader().setReorderingAllowed(false);
+        
+        // the client can only select one row from table
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        // add a listener to listen whether a row is selected or not
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -117,11 +147,14 @@ public class ClientUI implements Serializable {
 		return this;
 	}
 	
+	// add button and set its clicking operation
 	private JButton addButton(String text) {
 		JButton button = new JButton(text);
 		if (text == "New") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
+					
+					// show new window and set iatacode and flight number editable
 					ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Add New Flight", true);
 					dialog.setBounds(150, 150, 800, 600);
 					dialog.setVisible(true);
@@ -131,8 +164,14 @@ public class ClientUI implements Serializable {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
 					int rowNumber = table.getSelectedRow();
+					
+					// if the client selected a row
 					if(rowNumber >= 0 && rowSelected) {
+						
+						// show new window and set iatacode and flight number not editable
 						ItemDetail dialog = new ItemDetail(getClientUI(), frame, "Flight Details - Edit Flight", false);
+						
+						// get flight info from the selected row
 						String iataCode = table.getValueAt(rowNumber, 1).toString();
 						String flightNumber = table.getValueAt(rowNumber, 2).toString();
 						System.out.println("iataCode: " + iataCode);
@@ -140,6 +179,7 @@ public class ClientUI implements Serializable {
 						for(Flight f: flights) {
 							if(f.getIataCode() == iataCode && f.getFlightNumber() == flightNumber) {
 
+								// send the selected flight to the 'Flight Details' window
 								dialog.addFlightData(f);
 								break;
 							}
@@ -147,20 +187,7 @@ public class ClientUI implements Serializable {
 						dialog.setBounds(150, 150, 800, 600);
 						dialog.setVisible(true);
 					} else {
-						JDialog dialog = new JDialog(frame, "Warning!");
-						dialog.setBounds(350, 350, 300, 100);
-						dialog.getContentPane().setLayout(new BorderLayout());
-							
-						JPanel contentPanel = new JPanel();
-						contentPanel.setLayout(new FlowLayout());
-						contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-						dialog.getContentPane().add(contentPanel, BorderLayout.CENTER);
-						{
-							JLabel lblPleaseSelectA = new JLabel("Please select a flight!");
-							contentPanel.add(lblPleaseSelectA);
-						}
-						dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-						dialog.setVisible(true);
+						showWarning();
 					}
 				}
 			});
@@ -170,7 +197,11 @@ public class ClientUI implements Serializable {
 				@Override
 				public void actionPerformed(ActionEvent evt) {
 					int rowNumber = table.getSelectedRow();
-					if(rowNumber >= 0) {
+					
+					// if the client selected a row
+					if(rowNumber >= 0 && rowSelected) {
+						
+						// get flight info from the selected row
 						String iataCode = table.getValueAt(rowNumber, 1).toString();
 						String flightNumber = table.getValueAt(rowNumber, 2).toString();
 						System.out.println("iataCode: " + iataCode);
@@ -180,15 +211,13 @@ public class ClientUI implements Serializable {
 								flights.remove(f);
 								
 								if(client != null) {
-									try {
-										client.stub.deleteFlight(client.getClientName(), f);
-									} catch (RemoteException e) {
-										e.printStackTrace();
-									}
+									deleteFlight(f);
 								}
 								break;
 							}
 						}
+					} else {
+						showWarning();
 					}
 				}
 			});
@@ -196,6 +225,25 @@ public class ClientUI implements Serializable {
 		return button;
 	}
 	
+	// show warning window if no row is selected
+	private void showWarning() {
+		JDialog dialog = new JDialog(frame, "Warning!");
+		dialog.setBounds(350, 350, 300, 100);
+		dialog.getContentPane().setLayout(new BorderLayout());
+			
+		JPanel contentPanel = new JPanel();
+		contentPanel.setLayout(new FlowLayout());
+		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		dialog.getContentPane().add(contentPanel, BorderLayout.CENTER);
+		{
+			JLabel lblPleaseSelectA = new JLabel("Please select a flight!");
+			contentPanel.add(lblPleaseSelectA);
+		}
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setVisible(true);
+	}
+	
+	// invocate remote method of server 'updateFlight'
 	public void updateFlight(Flight f) {
 		try {
 			this.client.stub.updateFlight(this.client.getClientName(), f);
@@ -204,15 +252,30 @@ public class ClientUI implements Serializable {
 		}
 	}
 	
+	// invocate remote method of server 'deleteFlight'
+	public void deleteFlight(Flight f) {
+		try {
+			this.client.stub.deleteFlight(client.getClientName(), f);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// add flight's data into the table
 	private void addData() {
 		
 		Runnable newdo = new Runnable() {
 
 			@Override
             public void run() {
+				
+				// clear the table
                 tableModel.resetTable();
+                
                 Vector<String> col = new Vector<String>();
                 Vector<Object> data = new Vector<Object>();
+                
+                // add column name to the table
                 col.add("Operating Airlines");
                 col.add("IATA Code");
                 col.add("Tracking Number");
@@ -221,8 +284,10 @@ public class ClientUI implements Serializable {
                 col.add("Terminal");
                 col.add("Scheduled Time");
                 col.add("Estimated Time");
+                
                 tableModel.setColumnNames(col);
                 
+                // add each flight information to the table as a row
                 for(Flight f:flights) {
                 	data = null;
                     data = new Vector<Object>();
@@ -241,36 +306,7 @@ public class ClientUI implements Serializable {
         SwingUtilities.invokeLater(newdo);
 	}
 
- 	private void initializeGUI() {
-		
-		//Create and set up the window
-		frame = new JFrame("TK Airport Arrivals / Departures");
-		frame.setBounds(100, 100, 800, 600);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		// inform server when client logs out
-		frame.addWindowListener(new WindowListener() {
-			public void windowOpened(WindowEvent e) {}
-	        public void windowIconified(WindowEvent e) {}
-	        public void windowDeiconified(WindowEvent e) {}
-	        public void windowDeactivated(WindowEvent e) {}
-	        public void windowClosed(WindowEvent e) {}
-	        public void windowActivated(WindowEvent e) {}
-			@Override
-			public void windowClosing(WindowEvent e) {
-				try {
-					client.stub.logout(client.getClientName());
-				} catch (RemoteException ex) {
-					ex.printStackTrace();
-				}
-			}	
-		});
-		
-		addComponentsToPane(frame.getContentPane());	
-		addData();
-		frame.setVisible(true);
-	}
-	
+	// define own table model
 	private class myTableModel extends AbstractTableModel {
 		
 		private static final long serialVersionUID = 1L;

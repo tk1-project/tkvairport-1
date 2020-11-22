@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'tk1-ex1'
+rootProject.name = 'tk1-ex1-g16'

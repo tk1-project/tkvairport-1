@@ -1,4 +1,3 @@
-import java.awt.EventQueue;
 import java.io.Serializable;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -29,12 +28,12 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 	
 	private String clientName;
 	
+	// HastMap for storing flight objects
 	private Map<String, Flight> flights;
 
-	// global state
 	public FlightClient(String clientName) throws RemoteException {
+		
 		this.clientName = clientName;
-
 		this.flights = new HashMap<String, Flight>();
 		
 	}
@@ -43,6 +42,7 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 	public void receiveListOfFlights(List<Flight> flights) {
 		logger.log(Level.INFO, "List of flights received: " + flights.size());
 		
+		// check if received flight is already in the hashmap
 		for(Flight f: flights) {
 			String flightKey = f.getIataCode() + f.getFlightNumber();
 			if(this.flights.containsKey(flightKey)) {
@@ -51,12 +51,15 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 				this.flights.put(flightKey, f);	
 			}
 		}
+		// show newly received flights to the UI
 		ui.updateUI(new ArrayList<>(this.flights.values()));
 	}
 
 	@Override
 	public void receiveUpdatedFlight(Flight flight, boolean deleted) {
 		String flightKey = flight.getIataCode() + flight.getFlightNumber();
+		
+		// check if the flight is deleted or edited
 		if(deleted) {
 			if(this.flights.containsKey(flightKey)) {
 				this.flights.remove(flightKey);
@@ -69,6 +72,8 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 			}
 		}
 		logger.log(Level.INFO, "Flight updated: " + flight.toString());
+		
+		// show newly updated flight to the UI
 		ui.updateUI(new ArrayList<>(this.flights.values()));
 	}
 
@@ -76,15 +81,18 @@ public class FlightClient extends UnicastRemoteObject implements IFlightClient, 
 		
 		Registry registry;
 		try {
+			
+			// find the rmi registry
 			registry = LocateRegistry.getRegistry(HOSTNAME, PORT);
 			
+			// bind the stub to the registry
 			stub = (IFlightServer) registry
 					.lookup("Flight Server");
 			
+			// invocate remote method from FlightServer 'login'
 			stub.login(this.clientName, this);
 			
 		} catch (RemoteException | NotBoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
