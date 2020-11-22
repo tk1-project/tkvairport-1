@@ -23,8 +23,13 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 
 	private static Logger logger = Logger.getLogger(FlightServer.class.getName());
 	
+	// HashMap for storing client objects
 	private Map<String, IFlightClient> clients;
+	
+	// HastMap for storing flight objects
 	private Map<String, Flight> flights;
+	
+	// RMI registry
 	private static Registry r;
 	
 	private static final int PORT = 1099;
@@ -33,14 +38,8 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 	protected FlightServer() throws RemoteException {
 		super();
 
-		flights = new HashMap<>();
-		
-//		String iataCode, String airline, String model, String flightNumber, String departureAirport, String arrivalAirport, 
-//		LocalDate originDate, FlightStatus status, LocalDateTime sTime, String terminal, ArrayList<String> gates, 
-//		String cLocation, String cCounter, LocalDateTime cTimeMin, LocalDateTime cTimeMax
-		
-//		String iataCode, String airline, String model, String flightNumber, String departureAirport, String arrivalAirport, 
-//		LocalDate originDate, FlightStatus status, LocalDateTime sTime, String terminal, ArrayList<String> gates, LocalDateTime eTime		
+		// Initialize Flights with example data
+		flights = new HashMap<>();		
 		
 		Flight[] initialFlights = new Flight[] {
 				new DepartureFlight("LH", "Lufthansa", "A380", "591", "TK", "FRA", 
@@ -59,36 +58,42 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 						"C1, C2, C3", LocalDateTime.of(2020,  11, 21, 12, 5))
 		};
 		
+		// Saving flights as Key-Value Pairs
 		for(Flight f: initialFlights) {
 			this.flights.put(f.getIataCode() + f.getFlightNumber(), f);
 		}
 		
-		System.out.println("Added <" +flights.size()+ "> new Flights...");
+		logger.log(Level.INFO, "Added <" +flights.size()+ "> new Flights...");
 				
-		// ...
+		// Initializing client map
 		clients = new HashMap<>();
 		
-		// ...
 	}
 
 	@Override
 	public void login(String clientName, IFlightClient client) throws RemoteException {
-		
+		// Check if clientName is already taken
 		if(this.clients.containsKey(clientName)) {
+			// generate new unique client name
 			clientName += UUID.randomUUID().toString();
+			
+			// Update name in client object
 			FlightClient handle = (FlightClient) client;
 			handle.setClientName(clientName);
 		}
+		logger.log(Level.INFO, "New client logged in: " + clientName);
 		
+		// Saving Client as Key-Value Pair
 		this.clients.put(clientName, client);
 	
+		// Sending Flights to client
 		client.receiveListOfFlights(new ArrayList<>(this.flights.values()));
-		logger.log(Level.INFO, "New client logged in: " + clientName);
 		logger.log(Level.INFO, "Sending flights: " + this.flights.values());
 	}
 
 	@Override
 	public void logout(String clientName) throws RemoteException {
+		// Remove client
 		this.clients.remove(clientName);
 		logger.log(Level.INFO, "Client logged out: " + clientName);
 	}
@@ -96,11 +101,17 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 	@Override
 	public void updateFlight(String clientName, Flight flight) throws RemoteException {
 		String flightKey = flight.getIataCode() + flight.getFlightNumber();
+		
+		// Check if flight already exists
 		if(this.flights.containsKey(flightKey)) {
+			// Update flight data
 			this.flights.replace(flightKey, flight);
 		} else {
+			// Add new flight
 			this.flights.put(flightKey, flight);
 		}
+		
+		// Send flight information updates to all clients
 		this.informAllClients(flight, false);
 		logger.log(Level.INFO, "Update flight: " + flight.toString());
 	}
@@ -108,14 +119,19 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 	@Override
 	public void deleteFlight(String clientName, Flight flight) throws RemoteException {
 		String flightKey = flight.getIataCode() + flight.getFlightNumber();
+		// Check if flight exists
 		if(this.flights.containsKey(flightKey)) {
+			// Remove flight
 			this.flights.remove(flightKey);
 		}
+		
+		// Send flight information updates to all clients
 		this.informAllClients(flight, true);
 		logger.log(Level.INFO, "Delete flight: " + flight.toString());
 	}
 
 	private void informAllClients(Flight flight, boolean deleted) throws RemoteException {
+		// Send flight information to every client
 		for(IFlightClient client: this.clients.values()){  
 			client.receiveUpdatedFlight(flight, deleted);
 		}
@@ -134,8 +150,6 @@ public class FlightServer extends UnicastRemoteObject implements IFlightServer, 
 			// create a local registry
 			Registry registry = LocateRegistry.createRegistry(PORT);
 
-			// Registry registry = LocateRegistry.getRegistry();
-			
 			// bind the stub to the registry
 			registry.rebind("Flight Server", flightserver);
 			

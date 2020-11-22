@@ -56,9 +56,13 @@ public class ItemDetail extends JDialog {
 	
 	JRadioButton bArr, bDep;
 	
+	// Field to distinguish between arrival and departure flights
 	private boolean depFlight;
+	
+	// Field to distinguish between new and edited flights
 	private boolean editFlight;
 	
+	// ui object to update flight data
 	private ClientUI ui;
 
 	public ItemDetail(ClientUI ui, JFrame frame, String title, boolean editable) {
@@ -69,7 +73,9 @@ public class ItemDetail extends JDialog {
 		initializeGUI();
 	}
 	
+	// Initialize GUI with Labels, Buttons, TextFields
 	private void initializeGUI() {
+		// Window size
 		setBounds(150, 150, 800, 600);
 		getContentPane().setLayout(new BorderLayout());
 		wrapper.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -79,6 +85,7 @@ public class ItemDetail extends JDialog {
 		gbl_wrapper.columnWeights = new double[]{0.0, 1.0, 0.0, 1.0};
 		wrapper.setLayout(gbl_wrapper);
 
+		// Descriptive labels
 		JLabel[] label = new JLabel[] {
 				new JLabel("IATA Code"),
 				new JLabel("Operating Airline"),
@@ -102,6 +109,7 @@ public class ItemDetail extends JDialog {
 				new JLabel("Flight States")
 		};
 
+		// Grid Layout for Labels and Text Fields
 		GridBagConstraints[] gbc = new GridBagConstraints[] {
 				new GridBagConstraints(0,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
 				new GridBagConstraints(2,0,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(0, 0, 5, 5),20,16),
@@ -129,6 +137,8 @@ public class ItemDetail extends JDialog {
 		for(int num = 0; num < label.length; num++) {
 			wrapper.add(label[num], gbc[num]);
 		}
+		
+		// Placing TextFields into GridSystem
 		
 		{
 			iataCode = new JTextField();
@@ -363,11 +373,14 @@ public class ItemDetail extends JDialog {
 				buttonPane.add(bDep);
 				buttonPane.add(bArr);
 				
+				
+				// Flights are Departure by Default
 				setDepFlight(true);
 			}
 		}
 	}
 	
+	// Place existing flight data into text fields
 	public void addFlightData(Flight f) {
 		if(f != null) {
 			iataCode.setText(f.getIataCode());
@@ -380,6 +393,7 @@ public class ItemDetail extends JDialog {
 			flightStates.setSelectedItem(f.getStatus().getText());
 			
 			
+			// Distinguish between DepartureFlights and ArrivalFlights to place correct data
 			if (f instanceof DepartureFlight) {
 				setDepFlight(true);
 				DepartureFlight handle = (DepartureFlight) f;
@@ -402,36 +416,41 @@ public class ItemDetail extends JDialog {
 		}
 	}
 	
+	// Button Action Handlers
 	private JButton addButton(String text) {
 		JButton button = new JButton(text);
 		if (text == "Cancel") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					System.out.println("Cancel...");
+					// Close Edit View
 					setVisible(false);
 				}
 			});
 		} else if(text == "Save") {
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent event) {
-					System.out.println("Save...");
-
 					Flight f;
-					if(isDataValid() && depFlight) {
+					if(isDataValid() && depFlight) { // Check if data is valid and departure flight
+						// new DepartureFlight Object
 						f = new DepartureFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
 								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
 								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sDepTime.getText()), 
 								depTerminal.getText(), depGates.getText(), LocalDateTime.parse(eDeparture.getText()), cLocation.getText(), 
 								cCounter.getText(), LocalDateTime.parse(cTimeMin.getText()), LocalDateTime.parse(cTimeMax.getText()));
+						// Push data to Main UI
 						ui.updateFlight(f);
+						// Close Edit View
 						setVisible(false);
-					} else if (isDataValid() && !depFlight) {
+					} else if (isDataValid() && !depFlight) { // Check if data is valid and arrival flight
+						// new ArrivalFlight Object
 						f = new ArrivalFlight(iataCode.getText(), airline.getText(), model.getText(), flightNumber.getText(),
 								departureAirport.getText(), arrivalAirport.getText(), LocalDate.parse(originDate.getText()), 
 								FlightStatus.valueOfIndex(flightStates.getSelectedIndex()), LocalDateTime.parse(sArrTime.getText()), 
 								arrTerminal.getText(), arrGates.getText(), LocalDateTime.parse(eArrival.getText()));
 
+						// Push data to Main UI
 						ui.updateFlight(f);
+						// Close Edit View
 						setVisible(false);
 					}
 				}
@@ -443,6 +462,7 @@ public class ItemDetail extends JDialog {
 	private void setDepFlight(boolean depFlight) {
 		this.depFlight = depFlight;
 		
+		// Disable / Enable DepartureFlight Fields
 		for (JTextField t: new JTextField[] {
 				sDepTime,
 				depTerminal,
@@ -458,6 +478,7 @@ public class ItemDetail extends JDialog {
 			
 		}
 		
+		// Disable / Enable ArrivalFlight Fields
 		for (JTextField t: new JTextField[] {
 				sArrTime,
 				arrTerminal,
@@ -468,6 +489,7 @@ public class ItemDetail extends JDialog {
 			t.setEditable(!depFlight);
 		}
 		
+		// Set Flight Example Format Data
 		if (depFlight) {
 			sDepTime.setText("1970-01-01T00:00");
 			eDeparture.setText("1970-01-01T00:00");
@@ -485,22 +507,26 @@ public class ItemDetail extends JDialog {
 		}
 	}
 	
+	// Check if all required inputs have valid format 
 	private boolean isDataValid() {
 		try {
-			//TODO: error
 			boolean errorOccured = false;
+			// Check iataCode / flightNumber
 			for(JTextField t: new JTextField[] {
 					iataCode,
 					flightNumber
 			}) {
 				if(t.getText() == null || t.getText().length() == 0) {
+					// If Empty, mark red
 					t.setBorder(BorderFactory.createLineBorder(Color.RED));
 					errorOccured = true;
 				} else {
+					// If correct, remove red border
 					t.setBorder(BorderFactory.createLineBorder(Color.WHITE));
 				}
 			}
 			if (originDate.getText() == null || !originDate.getText().matches("([0-9]{4})-([0-9]{2})-([0-9]{2})")) {
+				// If Empty, mark red
 				originDate.setBorder(BorderFactory.createLineBorder(Color.RED));
 				errorOccured = true;
 			}
@@ -527,9 +553,11 @@ public class ItemDetail extends JDialog {
 				checkFields = arrFields;
 				resetFields = depFields;
 			}
+			// reset field borders not needed
 			for(JTextField t: resetFields) {
 				t.setBorder(BorderFactory.createLineBorder(Color.WHITE));
 			}
+			// check required fields 
 			for(JTextField t: checkFields) {
 					if(t.getText() == null || !t.getText().matches("([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})")) {
 						t.setBorder(BorderFactory.createLineBorder(Color.RED));
